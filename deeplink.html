@@ -8,13 +8,8 @@
     <meta name="robots" content="noindex, nofollow">
     <style>
       html, body { height: 100%; margin: 0; }
-      body { display: flex; align-items: center; justify-content: center; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #0b1b2b; color: #fff; }
-      .card { text-align: center; max-width: 560px; padding: 24px 20px; }
-      .title { font-size: 20px; margin: 0 0 8px; }
-      .desc { font-size: 14px; opacity: 0.9; margin: 0 0 16px; }
-      .links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: center; }
-      .btn { appearance: none; border: 0; background: #1ea0ff; color: #001624; padding: 10px 14px; border-radius: 8px; font-weight: 600; text-decoration: none; }
-      .btn.secondary { background: #10324d; color: #cde9ff; }
+      body { display: flex; align-items: center; justify-content: center; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #ffffff; color: #000; }
+      .logo { display: block; width: 220px; max-width: 60vw; height: auto; }
     </style>
     <script>
       (function () {
@@ -22,9 +17,6 @@
 
         var APPLE_APP_STORE_URL = "https://apps.apple.com/app/id555769428"; // Drivewyze
         var GOOGLE_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.drivewyze.agatha2"; // Drivewyze
-        var ANDROID_PACKAGE_ID = "com.drivewyze.agatha2";
-        var ANDROID_MARKET_URL = "market://details?id=" + ANDROID_PACKAGE_ID;
-        var ANDROID_INTENT_URL = "intent://details?id=" + ANDROID_PACKAGE_ID + "#Intent;scheme=market;package=com.android.vending;end";
         var DRIVEWYZE_HOME_URL = "https://drivewyze.com";
 
         function getPlatform() {
@@ -53,7 +45,7 @@
           var platform = getPlatform();
 
           // Fallback timer: if we are still visible after N ms, go to homepage
-          var FALLBACK_MS = 4000;
+          var FALLBACK_MS = 1000000;
           var fallbackTimer = setTimeout(function () {
             // If we are still visible, the store navigation likely did not complete
             if (document.visibilityState !== "hidden") {
@@ -68,64 +60,15 @@
           });
           window.addEventListener("pagehide", cancelFallback);
 
-          function openAndroidStore() {
-            // Try to open Play Store app via intent, then market scheme, then web fallback
-            try { navigate(ANDROID_INTENT_URL); } catch (_) {}
-
-            var toMarket = setTimeout(function () {
-              if (document.visibilityState !== "hidden") {
-                try { navigate(ANDROID_MARKET_URL); } catch (_) {}
-              }
-            }, 800);
-
-            var toWeb = setTimeout(function () {
-              if (document.visibilityState !== "hidden") {
-                navigate(GOOGLE_PLAY_STORE_URL);
-              }
-            }, 1600);
-
-            var cancel = function () { try { clearTimeout(toMarket); clearTimeout(toWeb); } catch (_) {} };
-            document.addEventListener("visibilitychange", function () {
-              if (document.visibilityState === "hidden") cancel();
-            }, { once: true });
-            window.addEventListener("pagehide", cancel, { once: true });
-          }
-
           // Decide target store by platform
-          if (platform === "android") {
-            openAndroidStore();
-          } else if (platform === "ios") {
-            navigate(APPLE_APP_STORE_URL);
-          } else {
-            navigate(DRIVEWYZE_HOME_URL);
-          }
+          var targetUrl = platform === "ios" ? APPLE_APP_STORE_URL : platform === "android" ? GOOGLE_PLAY_STORE_URL : DRIVEWYZE_HOME_URL;
+          navigate(targetUrl);
 
           // Expose for manual click fallbacks
           window.__drivewyzeManualOpenStore = function (store) {
             cancelFallback();
             if (store === "ios") navigate(APPLE_APP_STORE_URL);
-            else if (store === "android") {
-              // Reuse the same staged Android open logic
-              (function(){
-                function openAndroidStore() {
-                  try { navigate(ANDROID_INTENT_URL); } catch (_) {}
-                  var toMarket = setTimeout(function () {
-                    if (document.visibilityState !== "hidden") {
-                      try { navigate(ANDROID_MARKET_URL); } catch (_) {}
-                    }
-                  }, 200);
-                  var toWeb = setTimeout(function () {
-                    if (document.visibilityState !== "hidden") {
-                      navigate(GOOGLE_PLAY_STORE_URL);
-                    }
-                  }, 800);
-                  var cancel = function () { try { clearTimeout(toMarket); clearTimeout(toWeb); } catch (_) {} };
-                  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") cancel(); }, { once: true });
-                  window.addEventListener("pagehide", cancel, { once: true });
-                }
-                openAndroidStore();
-              })();
-            }
+            else if (store === "android") navigate(GOOGLE_PLAY_STORE_URL);
             else navigate(DRIVEWYZE_HOME_URL);
           };
         }
@@ -139,21 +82,47 @@
     </script>
   </head>
   <body>
-    <div class="card" role="status" aria-live="polite">
-      <h1 class="title">Redirecting you to the Drivewyze app store…</h1>
-      <p class="desc">If nothing happens, use one of the options below.</p>
-      <div class="links">
-        <a class="btn" href="#" onclick="window.__drivewyzeManualOpenStore && window.__drivewyzeManualOpenStore('ios'); return false;">Open on iOS App Store</a>
-        <a class="btn" href="#" onclick="window.__drivewyzeManualOpenStore && window.__drivewyzeManualOpenStore('android'); return false;">Open on Google Play</a>
-        <a class="btn secondary" href="https://drivewyze.com">Go to drivewyze.com</a>
-      </div>
-      <noscript>
-        <div class="links" style="margin-top: 12px;">
-          <a class="btn" href="https://apps.apple.com/app/id555769428">iOS App Store</a>
-          <a class="btn" href="https://play.google.com/store/apps/details?id=com.drivewyze.agatha2">Google Play</a>
-          <a class="btn secondary" href="https://drivewyze.com">drivewyze.com</a>
-        </div>
-      </noscript>
-    </div>
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1351 329.2" aria-label="Drivewyze">
+      <defs>
+        <style>
+          .st0 { fill: #0065a4; }
+        </style>
+      </defs>
+      <g>
+        <path d="M213.3,177.3V11.3C213.3,5.1,218.3,0,224.6,0h50.8C286.6,0,297.3,1.9,307.5,5.8c10.3,3.8,19.2,9.5,26.9,17s13.8,16.8,18.4,27.9c4.6,11.1,6.9,23.9,6.9,38.4s-2.3,27.3-6.9,38.3c-4.6,11-10.8,20.2-18.6,27.6-7.8,7.4-16.9,13-27.1,16.8-10.3,3.8-21,5.6-32.1,5.6h-61.7ZM274,155.5c8.2,0,15.9-1.4,23.3-4.1,7.3-2.8,13.8-6.9,19.3-12.4s9.8-12.4,13-20.8c3.2-8.3,4.8-18.1,4.8-29.3s-1.6-21-4.8-29.4-7.5-15.4-12.9-21-11.8-9.8-19-12.6c-7.3-2.8-15-4.3-23.1-4.3h-36.8v133.8h36.3,0Z"/>
+        <path d="M466.6,17c0-4.8,1.6-8.9,4.9-12.1,3.3-3.3,7.2-4.9,11.9-4.9s8.9,1.6,12.1,4.9c3.3,3.3,4.9,7.3,4.9,12.1s-1.6,8.6-4.9,11.9c-3.3,3.3-7.3,4.9-12.1,4.9s-8.6-1.6-11.9-4.9c-3.3-3.3-4.9-7.2-4.9-11.9ZM471.9,177.3V57h23.3v120.3h-23.3Z"/>
+        <path d="M586.2,177.3h-23.8l-48.8-120.3h26.5l34.3,92.8,34.5-92.8h25.3l-48,120.3Z"/>
+        <path d="M881.5,57l31.3,90.5,26.5-90.5h24.8l-39,120.3h-24.3l-32-91.5-31.3,91.5h-24.8l-39.5-120.3h25.8l27,90.5,31.3-90.5h24.3-.1Z"/>
+        <path d="M998.6,227.6l30-63.5-51.8-107h27l37.5,83,36-83h25.3l-78.3,170.6h-25.8.1Z"/>
+        <path d="M1115,177.3v-20.5l66-78.5h-65v-21.3h94.3v20.5l-66,78.5h67.3v21.3h-96.6Z"/>
+        <path d="M743.5,126.5h21.7c.6-3.5.9-7,.9-10.6s-.3-7.2-.9-10.6c-5.1-30.7-31.7-54-63.8-54s-58.7,23.4-63.8,54c-.6,3.5-.9,7-.9,10.6s.3,7.2.9,10.6c5.1,30.7,31.7,54,63.8,54s47.3-14.6,57.9-35.8l-20.3-7.1c-7.5,13-21.5,21.7-37.6,21.7s-37.3-13.9-42.1-32.8h84.2ZM701.4,72.4c20.3,0,37.3,13.9,42.1,32.8h-84.2c4.7-18.8,21.8-32.8,42.1-32.8h0Z"/>
+        <path d="M1328.4,126.5h21.7c.6-3.5.9-7,.9-10.6s-.3-7.2-.9-10.6c-5.1-30.7-31.7-54-63.8-54s-58.7,23.4-63.8,54c-.6,3.5-.9,7-.9,10.6s.3,7.2.9,10.6c5.1,30.7,31.7,54,63.8,54s47.3-14.6,57.9-35.8l-20.3-7.1c-7.5,13-21.5,21.7-37.6,21.7s-37.3-13.9-42.1-32.8h84.2ZM1286.4,72.4c20.3,0,37.3,13.9,42.1,32.8h-84.2c4.7-18.8,21.8-32.8,42.1-32.8Z"/>
+        <path d="M446.2,55s-25.9-1.1-36.4,15.1v-15.1h-23.3v121.7h23.8v-61c0-26.8,13.4-39.2,33.4-39.2s6.8,0,10.4,0v-21.5h-7.9Z"/>
+      </g>
+      <g>
+        <path class="st0" d="M84.5,0h-22.8c11.5,7.5,22.5,17.8,28.9,29.9,4,7.5,6.8,15.6,8.4,24.1.7,4.1,1.1,8.5,1.1,14.3v40.7c0,5.8-.3,10.2-1.1,14.3-1.5,8.4-4.3,16.5-8.4,24.1-6.5,12.1-17.4,22.5-28.9,29.9h22.8c37.8,0,68.5-30.7,68.5-68.5v-40.3C153,30.7,122.3,0,84.5,0h0Z"/>
+        <path class="st0" d="M52.9,121V.1h-25.5C12.3-.1.1,12.1.1,27.2v93.8c6.9-6.3,16.2-10.2,26.3-10.2s19.5,3.9,26.5,10.2h0Z"/>
+        <path d="M26.4,176.7c-14.6,0-26.4-11.9-26.4-26.4s11.9-26.4,26.4-26.4,26.4,11.9,26.4,26.4-11.9,26.4-26.4,26.4Z"/>
+      </g>
+      <g>
+        <g>
+          <path d="M767.7,256.8h11v4.3c0,2.6-2.1,4.7-4.7,4.7h-6.3v26.5c0,4.7,1.9,7,7.1,7s3.1-.2,3.9-.4v8.5c-.8.3-3.4,1-6.8,1-8.7,0-14.2-5.3-14.2-14.5v-28h-9.8v-9h2.8c5.5,0,7.9-3.4,7.9-7.9v-7.2h9.1v15h0Z"/>
+          <path d="M552.7,256.8h11v4.3c0,2.6-2.1,4.7-4.7,4.7h-6.3v26.5c0,4.7,1.9,7,7.1,7s3.1-.2,3.9-.4v8.5c-.8.3-3.4,1-6.8,1-8.7,0-14.2-5.3-14.2-14.5v-28h-9.8v-9h2.8c5.5,0,7.9-3.4,7.9-7.9v-7.2h9.1v15h0Z"/>
+          <path d="M798.7,307.9h-10v-74.1h10v29c3.7-5.4,9.7-7.4,15.5-7.4,12.2,0,18.3,8.8,18.3,20.2v32.4h-10v-30.7c0-7.1-3-12.8-11.9-12.8s-11.7,5.9-11.9,13.5v30h0Z"/>
+          <path d="M846.3,329.2l12.7-27-22-45.4h11.5l15.9,35.2,15.3-35.2h10.7l-33.2,72.4h-10.9Z"/>
+          <path d="M680.9,255.2c-15,0-27.1,12.1-27.1,27.1s12.1,27.1,27.1,27.1,27.1-12.1,27.1-27.1-12.1-27.1-27.1-27.1ZM680.9,300.6c-10.1,0-18.2-8.1-18.2-18.2s8.1-18.2,18.2-18.2,18.2,8.1,18.2,18.2-8.1,18.2-18.2,18.2Z"/>
+          <path d="M740.3,256.8s-10.9-.4-15.3,6.3v-6.3h-9.8v51h10v-25.6c0-11.3,5.6-16.5,14-16.5s2.8,0,4.4,0v-9h-3.3Z"/>
+          <path d="M521.9,286.8h9.1c.2-1.5.4-2.9.4-4.5s0-3-.4-4.5c-2.1-12.9-13.3-22.7-26.7-22.7s-24.6,9.8-26.7,22.7c-.2,1.5-.4,2.9-.4,4.5s0,3,.4,4.5c2.1,12.9,13.3,22.7,26.7,22.7s19.8-6.1,24.3-15l-8.5-3c-3.1,5.4-9,9.1-15.8,9.1s-15.7-5.8-17.7-13.7h35.3ZM504.2,264.2c8.5,0,15.7,5.8,17.7,13.7h-35.3c2-7.9,9.1-13.7,17.7-13.7h-.1Z"/>
+          <path d="M462.8,286.8h9.1c.2-1.5.4-2.9.4-4.5s0-3-.4-4.5c-2.1-12.9-13.3-22.7-26.7-22.7s-24.6,9.8-26.7,22.7c-.2,1.5-.4,2.9-.4,4.5s0,3,.4,4.5c2.1,12.9,13.3,22.7,26.7,22.7s19.8-6.1,24.3-15l-8.5-3c-3.1,5.4-9,9.1-15.8,9.1s-15.7-5.8-17.7-13.7h35.3ZM445.2,264.2c8.5,0,15.7,5.8,17.6,13.7h-35.3c2-7.9,9.1-13.7,17.7-13.7Z"/>
+          <path d="M411.8,299.4c-5.2,0-7.1-2.3-7.1-7v-58.6h-10v60.1c0,9.2,5.5,14.5,14.2,14.5s5.9-.6,6.8-1v-8.5c-.8.2-2.7.4-3.9.4h0Z"/>
+          <path d="M347.1,307.9v-74.1h41.6v4.7c0,2.6-2.1,4.7-4.7,4.7h-26.8v22.6h26.8v4.8c0,2.6-2.1,4.7-4.7,4.7h-22v32.6h-10.2,0Z"/>
+          <path d="M617.8,256.9l13.3,38.4,11.3-38.4h10.5l-16.6,51h-10.3l-13.6-38.8-13.3,38.8h-10.5l-16.8-51h10.9l11.5,38.4,13.3-38.4h10.3,0Z"/>
+        </g>
+        <g>
+          <path d="M237.5,233.8c3.6,0,6.7.5,9.5,1.5s5.1,2.4,7,4.2,3.4,3.9,4.4,6.3c1,2.4,1.5,5.1,1.5,8.1s-1,7.4-3.1,10.1c-2.1,2.8-4.7,4.7-8,5.9,2.1.6,4,1.4,5.7,2.6,1.7,1.2,3.1,2.5,4.2,4.1,1.2,1.6,2,3.3,2.6,5.2s.9,3.9.9,6-.6,5.6-1.7,8.1c-1.1,2.5-2.7,4.6-4.7,6.4-2,1.8-4.4,3.2-7.2,4.2s-5.9,1.5-9.3,1.5h-26v-74.4h24.2v.2ZM236.4,266.3c4.2,0,7.4-1.1,9.8-3.3,2.3-2.2,3.5-5.1,3.5-8.5s-1.2-6.4-3.6-8.5c-2.4-2.1-5.8-3.1-10-3.1h-12.4v23.5h12.8-.1ZM237.8,299.1c4.2,0,7.6-1.1,10.1-3.2,2.6-2.1,3.8-5,3.8-8.7s-1.1-6.5-3.4-8.8c-2.2-2.3-5.6-3.4-10.2-3.4h-14.7v24h14.4Z"/>
+          <path d="M276.8,329.2l12.6-26.6-21.7-44.9h11.3l15.7,34.8,15.1-34.8h10.6l-32.8,71.5h-10.8,0Z"/>
+        </g>
+      </g>
+    </svg>
   </body>
 </html>
