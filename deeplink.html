@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Drivewyze | Redirecting…</title>
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body { display: flex; align-items: center; justify-content: center; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #0b1b2b; color: #fff; }
+      .card { text-align: center; max-width: 560px; padding: 24px 20px; }
+      .title { font-size: 20px; margin: 0 0 8px; }
+      .desc { font-size: 14px; opacity: 0.9; margin: 0 0 16px; }
+      .links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: center; }
+      .btn { appearance: none; border: 0; background: #1ea0ff; color: #001624; padding: 10px 14px; border-radius: 8px; font-weight: 600; text-decoration: none; }
+      .btn.secondary { background: #10324d; color: #cde9ff; }
+    </style>
+    <script>
+      (function () {
+        "use strict";
+
+        var APPLE_APP_STORE_URL = "https://apps.apple.com/app/id555769428"; // Drivewyze
+        var GOOGLE_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.drivewyze.agatha2"; // Drivewyze
+        var DRIVEWYZE_HOME_URL = "https://drivewyze.com";
+
+        function getPlatform() {
+          var ua = navigator.userAgent || "";
+          var uaData = (navigator.userAgentData && navigator.userAgentData.platform) ? navigator.userAgentData.platform : "";
+
+          var platform = (uaData || ua).toLowerCase();
+
+          // Detect iPadOS 13+ which reports as Mac but is touch-capable
+          var isIpadOs = /macintosh/.test(platform) && typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 1;
+
+          if (/iphone|ipad|ipod/.test(platform) || isIpadOs) return "ios";
+          if (/android/.test(platform)) return "android";
+          return "other";
+        }
+
+        function navigate(url) {
+          try {
+            window.location.replace(url);
+          } catch (e) {
+            window.location.href = url;
+          }
+        }
+
+        function initRedirectFlow() {
+          var platform = getPlatform();
+
+          // Fallback timer: if we are still visible after N ms, go to homepage
+          var FALLBACK_MS = 4000;
+          var fallbackTimer = setTimeout(function () {
+            // If we are still visible, the store navigation likely did not complete
+            if (document.visibilityState !== "hidden") {
+              navigate(DRIVEWYZE_HOME_URL);
+            }
+          }, FALLBACK_MS);
+
+          // If the page becomes hidden (navigated away or app switch), cancel fallback
+          var cancelFallback = function () { try { clearTimeout(fallbackTimer); } catch (_) {} };
+          document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "hidden") cancelFallback();
+          });
+          window.addEventListener("pagehide", cancelFallback);
+
+          // Decide target store by platform
+          var targetUrl = platform === "ios" ? APPLE_APP_STORE_URL : platform === "android" ? GOOGLE_PLAY_STORE_URL : DRIVEWYZE_HOME_URL;
+          navigate(targetUrl);
+
+          // Expose for manual click fallbacks
+          window.__drivewyzeManualOpenStore = function (store) {
+            cancelFallback();
+            if (store === "ios") navigate(APPLE_APP_STORE_URL);
+            else if (store === "android") navigate(GOOGLE_PLAY_STORE_URL);
+            else navigate(DRIVEWYZE_HOME_URL);
+          };
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", initRedirectFlow);
+        } else {
+          initRedirectFlow();
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="card" role="status" aria-live="polite">
+      <h1 class="title">Redirecting you to the Drivewyze app store…</h1>
+      <p class="desc">If nothing happens, use one of the options below.</p>
+      <div class="links">
+        <a class="btn" href="#" onclick="window.__drivewyzeManualOpenStore && window.__drivewyzeManualOpenStore('ios'); return false;">Open on iOS App Store</a>
+        <a class="btn" href="#" onclick="window.__drivewyzeManualOpenStore && window.__drivewyzeManualOpenStore('android'); return false;">Open on Google Play</a>
+        <a class="btn secondary" href="https://drivewyze.com">Go to drivewyze.com</a>
+      </div>
+      <noscript>
+        <div class="links" style="margin-top: 12px;">
+          <a class="btn" href="https://apps.apple.com/app/id555769428">iOS App Store</a>
+          <a class="btn" href="https://play.google.com/store/apps/details?id=com.drivewyze.agatha2">Google Play</a>
+          <a class="btn secondary" href="https://drivewyze.com">drivewyze.com</a>
+        </div>
+      </noscript>
+    </div>
+  </body>
+</html>
+
