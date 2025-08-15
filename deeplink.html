@@ -22,6 +22,9 @@
 
         var APPLE_APP_STORE_URL = "https://apps.apple.com/app/id555769428"; // Drivewyze
         var GOOGLE_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.drivewyze.agatha2"; // Drivewyze
+        var ANDROID_PACKAGE_ID = "com.drivewyze.agatha2";
+        var ANDROID_MARKET_URL = "market://details?id=" + ANDROID_PACKAGE_ID;
+        var ANDROID_INTENT_URL = "intent://details?id=" + ANDROID_PACKAGE_ID + "#Intent;scheme=market;package=com.android.vending;end";
         var DRIVEWYZE_HOME_URL = "https://drivewyze.com";
 
         function getPlatform() {
@@ -65,15 +68,64 @@
           });
           window.addEventListener("pagehide", cancelFallback);
 
+          function openAndroidStore() {
+            // Try to open Play Store app via intent, then market scheme, then web fallback
+            try { navigate(ANDROID_INTENT_URL); } catch (_) {}
+
+            var toMarket = setTimeout(function () {
+              if (document.visibilityState !== "hidden") {
+                try { navigate(ANDROID_MARKET_URL); } catch (_) {}
+              }
+            }, 800);
+
+            var toWeb = setTimeout(function () {
+              if (document.visibilityState !== "hidden") {
+                navigate(GOOGLE_PLAY_STORE_URL);
+              }
+            }, 1600);
+
+            var cancel = function () { try { clearTimeout(toMarket); clearTimeout(toWeb); } catch (_) {} };
+            document.addEventListener("visibilitychange", function () {
+              if (document.visibilityState === "hidden") cancel();
+            }, { once: true });
+            window.addEventListener("pagehide", cancel, { once: true });
+          }
+
           // Decide target store by platform
-          var targetUrl = platform === "ios" ? APPLE_APP_STORE_URL : platform === "android" ? GOOGLE_PLAY_STORE_URL : DRIVEWYZE_HOME_URL;
-          navigate(targetUrl);
+          if (platform === "android") {
+            openAndroidStore();
+          } else if (platform === "ios") {
+            navigate(APPLE_APP_STORE_URL);
+          } else {
+            navigate(DRIVEWYZE_HOME_URL);
+          }
 
           // Expose for manual click fallbacks
           window.__drivewyzeManualOpenStore = function (store) {
             cancelFallback();
             if (store === "ios") navigate(APPLE_APP_STORE_URL);
-            else if (store === "android") navigate(GOOGLE_PLAY_STORE_URL);
+            else if (store === "android") {
+              // Reuse the same staged Android open logic
+              (function(){
+                function openAndroidStore() {
+                  try { navigate(ANDROID_INTENT_URL); } catch (_) {}
+                  var toMarket = setTimeout(function () {
+                    if (document.visibilityState !== "hidden") {
+                      try { navigate(ANDROID_MARKET_URL); } catch (_) {}
+                    }
+                  }, 200);
+                  var toWeb = setTimeout(function () {
+                    if (document.visibilityState !== "hidden") {
+                      navigate(GOOGLE_PLAY_STORE_URL);
+                    }
+                  }, 800);
+                  var cancel = function () { try { clearTimeout(toMarket); clearTimeout(toWeb); } catch (_) {} };
+                  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") cancel(); }, { once: true });
+                  window.addEventListener("pagehide", cancel, { once: true });
+                }
+                openAndroidStore();
+              })();
+            }
             else navigate(DRIVEWYZE_HOME_URL);
           };
         }
@@ -105,4 +157,3 @@
     </div>
   </body>
 </html>
-
